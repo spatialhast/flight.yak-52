@@ -1,0 +1,16 @@
+html, body, #cesiumContainer {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+#baseLayerPickerContainer {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 38px;
+    height:38px;
+    z-index: 1;
+}
