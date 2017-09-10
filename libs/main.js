@@ -37,13 +37,13 @@ imageryViewModels.push(new Cesium.ProviderViewModel({
 }));
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    animation: false,
+    //animation: false,
     baseLayerPicker: false,
     geocoder: false,
     imageryProvider: false,
     homeButton: false,
     navigationHelpButton: false,
-    timeline: false,
+    //timeline: false,
     infoBox: false,
     sceneModePicker: false
 });
@@ -61,22 +61,81 @@ var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', {
 });
 
 $.getJSON("data/points.geojson", function (data) {
+	addModel(data)
+});
+
+function addModel(data) {
+    var positionArray = [];
+    var flightTimeArray = [];
+    id = 0;
+
     for (var key in data.features) {
         var lat = data.features[key].geometry.coordinates[0];
         var lng = data.features[key].geometry.coordinates[1];
-        var height = data.features[key].properties.GPS_Alt;
+        var alt = data.features[key].properties.GPS_Alt;
+		var time = moment.unix(data.features[key].properties.TimeStamp/1000).format("YYYY-MM-DDTHH:mm:ssZ");
+		
+		console.log(time)
+		
+        positionArray.push(id, lat, lng, +alt);
+        flightTimeArray.push(time);
+
+        id = id + 1;
 
         viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(lat, lng, height),
+            position: Cesium.Cartesian3.fromDegrees(lat, lng, alt),
             point: {
                 color: Cesium.Color.fromCssColorString('#ff0000'),
-                pixelSize: 2
+                pixelSize: 3
             }
         });
 
     };
-});
 
-var boundingSphere = new Cesium.BoundingSphere(Cesium.Cartesian3.fromDegrees(36.0127, 49.9701, 1), 1800);
-viewer.camera.flyToBoundingSphere(boundingSphere, { duration: 2 });
+    var czml = [{
+        "id": "document",
+        "name": "CZML Path",
+        "version": "1.0",
+        "clock": {
+            "interval": flightTimeArray[0] + "/" + flightTimeArray[flightTimeArray.length - 1],
+            "currentTime": flightTimeArray[0],
+            "multiplier": 1
+        }
+    }, {
+        "id": "path",
+        "name": "path with GPS flight data",
+        "description": "FlySight sample",
+        "availability": flightTimeArray[0] + "/" + flightTimeArray[flightTimeArray.length - 1],
+        "path": {
+            "material": {
+                "polylineOutline": {
+                    "color": {
+                        "rgba": [255, 0, 255, 255]
+                    },
+                    "outlineColor": {
+                        "rgba": [0, 255, 255, 255]
+                    },
+                    "outlineWidth": 5
+                }
+            },
+            "width": 1,
+            "leadTime": 0,
+            "trailTime": 1000,
+            "resolution": 5
+        },
+		"model": {
+			"gltf" : "data/model.gltf",
+			"scale" : 0.05
+		},
+        "position": {
+            "epoch": flightTimeArray[0],
+            "cartographicDegrees": positionArray
+        }
+    }];
+
+    viewer.dataSources.add(Cesium.CzmlDataSource.load(czml)).then(function (ds) {
+        viewer.trackedEntity = ds.entities.getById('path');
+    });
+
+};
 
