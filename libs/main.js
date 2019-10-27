@@ -45,13 +45,14 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     navigationHelpButton: false,
     //timeline: false,
     infoBox: false,
-    sceneModePicker: false
+    sceneModePicker: false,
+    terrainProvider: Cesium.createWorldTerrain()
 });
 
-viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-    url: 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-    requestVertexNormals: true
-});
+// viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+//     url: 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+//     requestVertexNormals: true
+// });
 
 // init Base Layers
 var layers = viewer.imageryLayers;
